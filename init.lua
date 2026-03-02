@@ -213,6 +213,33 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+local function resolve_rust_analyzer_cmd()
+  -- 1) Prefer the rustup-managed analyzer that matches the active toolchain
+  local ra = vim.fn.trim(vim.fn.system 'rustup which rust-analyzer')
+  if ra ~= '' and vim.fn.executable(ra) == 1 then
+    return { ra }
+  end
+
+  -- 2) Fallback: Mason’s installed binary (if present)
+  local ok, registry = pcall(require, 'mason-registry')
+  if ok and registry.has_package 'rust-analyzer' then
+    local pkg = registry.get_package 'rust-analyzer'
+    local ra_path = pkg:get_install_path() .. '/rust-analyzer'
+    if vim.fn.executable(ra_path) == 1 then
+      return { ra_path }
+    end
+  end
+
+  -- 3) Last resort: whatever is on PATH
+  local path_ra = vim.fn.exepath 'rust-analyzer'
+  if path_ra ~= '' then
+    return { path_ra }
+  end
+
+  -- If we get here, nothing was found
+  return nil
+end
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -592,8 +619,14 @@ require('lazy').setup({
         -- gopls = {},
         pyright = {},
         rust_analyzer = {
-          procMacro = {
-            enable = true,
+          cmd = resolve_rust_analyzer_cmd(),
+          settings = {
+            ['rust-analyzer'] = {
+              procMacro = { enable = true },
+              cargo = {
+                targetDir = 'target/analyzer',
+              },
+            },
           },
         },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -683,7 +716,9 @@ require('lazy').setup({
         typescriptreact = { 'prettier' },
         typescript = { 'prettier' },
         javascript = { 'prettier' },
+        javascriptreact = { 'prettier' },
         json = { 'prettier' },
+        nix = { 'alejandra' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
@@ -908,7 +943,7 @@ require('lazy').setup({
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
   -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
