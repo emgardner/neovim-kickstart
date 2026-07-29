@@ -213,72 +213,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
--- local function resolve_rust_analyzer_cmd()
---   -- -- 1) Prefer the rustup-managed analyzer that matches the active toolchain
---   -- local ra = vim.fn.trim(vim.fn.system 'rustup which rust-analyzer')
---   -- if ra ~= '' and vim.fn.executable(ra) == 1 then
---   --   return { ra }
---   -- end
---
---   -- -- 2) Fallback: Mason’s installed binary (if present)
---   -- local ok, registry = pcall(require, 'mason-registry')
---   -- if ok and registry.has_package 'rust-analyzer' then
---   --   local pkg = registry.get_package 'rust-analyzer'
---   --   local ra_path = pkg:get_install_path() .. '/rust-analyzer'
---   --   if vim.fn.executable(ra_path) == 1 then
---   --     return { ra_path }
---   --   end
---   -- end
---
---   -- 3) Last resort: whatever is on PATH
---   local path_ra = vim.fn.exepath 'rust-analyzer'
---   if path_ra ~= '' then
---     return { path_ra }
---   end
---   vim.notify('rust-analyzer not found on PATH', vim.log.levels.ERROR)
---   -- If we get here, nothing was found
---   return nil
--- end
-
--- local function resolve_rust_analyzer_cmd()
---   local path = vim.env.PATH or ''
---
---   for dir in string.gmatch(path, '([^:]+)') do
---     local candidate = dir .. '/rust-analyzer'
---     if candidate:match '^/nix/store/' and vim.fn.executable(candidate) == 1 then
---       return { candidate }
---     end
---   end
---
---   local fallback = vim.fn.exepath 'rust-analyzer'
---   if fallback ~= '' and vim.fn.executable(fallback) == 1 then
---     return { fallback }
---   end
---
---   vim.notify('rust-analyzer not found', vim.log.levels.ERROR)
---   return nil
--- end
--- local function resolve_rust_analyzer_cmd(root_dir)
---   -- First try the rustup-managed rust-analyzer for this project root.
---   -- This respects rust-toolchain.toml / rust-toolchain if present.
---   if vim.fn.executable 'rustup' == 1 then
---     local cmd = { 'rustup', 'which', 'rust-analyzer' }
---     local out = vim.fn.systemlist(cmd, root_dir)
---     if vim.v.shell_error == 0 and out and out[1] and out[1] ~= '' then
---       return { out[1] }
---     end
---   end
---
---   -- Fallback to PATH
---   local ra = vim.fn.exepath 'rust-analyzer'
---   if ra ~= '' then
---     return { ra }
---   end
---
---   vim.notify('rust-analyzer not found', vim.log.levels.ERROR)
---   return nil
--- end
-
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -858,36 +792,81 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+  -- { -- Highlight, edit, and navigate code
+  --   'nvim-treesitter/nvim-treesitter',
+  --   build = ':TSUpdate',
+  --   branch = 'main',
+  --   opts = {
+  --     ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+  --     -- Autoinstall languages that are not installed
+  --     auto_install = true,
+  --     highlight = {
+  --       enable = true,
+  --       -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
+  --       --  If you are experiencing weird indenting issues, add the language to
+  --       --  the list of additional_vim_regex_highlighting and disabled languages for indent.
+  --       additional_vim_regex_highlighting = { 'ruby' },
+  --     },
+  --     indent = { enable = true, disable = { 'ruby' } },
+  --   },
+  --   config = function(_, opts)
+  --     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+
+  --     -- Prefer git instead of curl in order to improve connectivity in some environments
+  --     require('nvim-treesitter.install').prefer_git = true
+  --     ---@diagnostic disable-next-line: missing-fields
+  --     require('nvim-treesitter.configs').setup(opts)
+
+  --     -- There are additional nvim-treesitter modules that you can use to interact
+  --     -- with nvim-treesitter. You should go explore a few and see what interests you:
+  --     --
+  --     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
+  --     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
+  --     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  --   end,
+  -- },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
+    branch = 'main',
+    lazy = false,
     build = ':TSUpdate',
-    opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
-      -- Autoinstall languages that are not installed
-      auto_install = true,
-      highlight = {
-        enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { 'ruby' },
-      },
-      indent = { enable = true, disable = { 'ruby' } },
-    },
-    config = function(_, opts)
-      -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
 
-      -- Prefer git instead of curl in order to improve connectivity in some environments
-      require('nvim-treesitter.install').prefer_git = true
-      ---@diagnostic disable-next-line: missing-fields
-      require('nvim-treesitter.configs').setup(opts)
+    config = function()
+      local treesitter = require 'nvim-treesitter'
 
-      -- There are additional nvim-treesitter modules that you can use to interact
-      -- with nvim-treesitter. You should go explore a few and see what interests you:
-      --
-      --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-      --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-      --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+      treesitter.setup {}
+
+      treesitter.install {
+        'bash',
+        'c',
+        'diff',
+        'html',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'vim',
+        'vimdoc',
+      }
+
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = {
+          'sh',
+          'c',
+          'diff',
+          'html',
+          'lua',
+          'markdown',
+          'vim',
+          'help',
+        },
+        callback = function(args)
+          vim.treesitter.start(args.buf)
+
+          -- Tree-sitter indentation is experimental.
+          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end,
+      })
     end,
   },
 
