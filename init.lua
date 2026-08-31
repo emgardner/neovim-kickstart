@@ -99,6 +99,7 @@ vim.keymap.set('i', 'kj', '<Esc>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>pv', ':Explore<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>pv', ':Explore<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>nt', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>dv', ':DiffviewOpen main...HEAD<CR>', { noremap = true, silent = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
@@ -720,6 +721,10 @@ require('lazy').setup({
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
+  },
+  {
+    'sindrets/diffview.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
   },
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
