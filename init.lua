@@ -100,6 +100,8 @@ vim.keymap.set('n', '<leader>pv', ':Explore<CR>', { noremap = true, silent = tru
 vim.keymap.set('n', '<leader>pv', ':Explore<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>nt', ':NvimTreeToggle<CR>', { noremap = true, silent = true })
 vim.keymap.set('n', '<leader>dv', ':DiffviewOpen main...HEAD<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>vs', ':vs<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>vh', ':sp<CR>', { noremap = true, silent = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
